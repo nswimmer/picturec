@@ -75,9 +75,9 @@ class SIM960(serial.Serial):
         self.command("ICTL 1")  # Turn integral control on
         self.command("DCTL 0")  # Turn derivative control off
 
-        # self.command("GAIN NUMBER_VALUE")  # DETERMINE P VALUE
+        # self.command("GAIN NUMBER_VALUE")  # DETERMINE P VALUE (1.6e1 from ADR manual)
         # self.command("APOL (0 or 1)")  # DETERMINE DESIRED POLARITY BASED ON CONTROLLING VIA R, NOT T
-        # self.command("INTG NUMBER_VALUE")  # DETERMINE I VALUE
+        # self.command("INTG NUMBER_VALUE")  # DETERMINE I VALUE (0.2e0 from ADR manual)
         # self.command("DERV 0")  # Set D value to 0
 
     def disconnect(self):
