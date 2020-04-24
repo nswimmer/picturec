@@ -46,7 +46,7 @@ def sendToArduino(stringToSend):
 def recvLikeArduino():
     global startMarker, endMarker, serialPort, dataStarted, dataBuf, messageComplete
 
-    if serialPort.inWaiting() > 0 and messageComplete == False:
+    if serialPort.inWaiting() > 0 and not messageComplete:
         x = serialPort.read().decode("utf-8")  # decode needed for Python3
 
         if dataStarted == True:

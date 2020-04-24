@@ -9,7 +9,6 @@ from serial.tools.list_ports import comports
 from time import sleep
 import numpy as np
 import logging
-from custom_logging import MyTimedRotatingFileHandler as trfHandler
 from os.path import expanduser
 
 
@@ -18,7 +17,7 @@ class SIM921(serial.Serial):
         """
         Initialize SIM921 instrument class. Uses serial.Serial base class for communication through USB port
         """
-        self.setUpLog()
+        # self.setUpLog()
         serial_params = {'baudrate': 9600,
                          'timeout': 2,
                          'parity': serial.PARITY_NONE,
@@ -156,13 +155,9 @@ class SIM921(serial.Serial):
         self.log.setLevel(logging.DEBUG)
         sh = logging.StreamHandler()
         sh.setLevel(logging.DEBUG)
-        fh = trfHandler("instruments.log", whenTo='m', intervals=1, directory=expanduser("~"))
-        filefmt = logging.Formatter('%(asctime)s - %(name)s %(levelname)s - %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
         fmt = logging.Formatter('%(asctime)s - %(name)s %(levelname)s - %(message)s', datefmt="%Y-%m-%d %H:%M:%S")
-        fh.setFormatter(filefmt)
         sh.setFormatter(fmt)
         self.log.addHandler(sh)
-        self.log.addHandler(fh)
 
     def loadCurve(self, curveNum, curveType, curveName, curveData):
         """
