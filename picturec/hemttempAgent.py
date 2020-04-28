@@ -6,7 +6,8 @@ TODO: Decide whether we want polling to be mindless and just done on an interval
 TODO: Program in IOError and SerialError handling to account for unplugging/bad data/etc.
 TODO: Allow the program to take command line input (or access things from a config file)
 TODO: Start this program with systemd and get it up and running and restartable
-TODO: Subscribe to redis for hemt.enabled changes, and write the changes that are made as they are made
+TODO: Work with publish/subscribe to redis for hemt.enabled changes, and write the changes that are made as they are
+ made. How do we want to confirm that commands have been successful and the change was made?
 """
 
 import serial
@@ -29,7 +30,12 @@ class Hemtduino(serial.Serial):
         self.redis = walrus.Walrus(host='localhost', port=6379, db=REDIS_DB)
         self.redis_ts = self.redis.time_series('hemttemp.stream', ['hemt_biases', 'one.wire.temps'])
 
-    def arduino_receive(self):
+    def _reset(self):
+        self.setDTR(False)
+        time.sleep(0.5)
+        self.setDTR(True)
+
+    def _arduino_receive(self):
         dataStarted = False
         messageComplete = False
         dataBuffer = ""
@@ -54,18 +60,19 @@ class Hemtduino(serial.Serial):
             else:
                 return "XXX"
 
-    def arduino_wait(self):
+    def arduino_ping(self):
         log.debug("Waiting for Arduino")
-        self.arduino_send("ping")
+        self._arduino_send("ping")
 
-        msg = self.arduino_receive()
+        msg = self._arduino_receive()
         log.info(msg)
 
-    def arduino_send(self, command):
+    def _arduino_send(self, command):
         cmdWMarkers = START_MARKER
         cmdWMarkers += command
         cmdWMarkers += END_MARKER
 
+        log.debug("Writing...")
         self.write(cmdWMarkers.encode("utf-8"))
         time.sleep(0.5)
 
@@ -88,14 +95,14 @@ class Hemtduino(serial.Serial):
         return msgtype, msg
 
     def run(self):
-        self.arduino_wait()
+        self.arduino_ping()
         prevTime = time.time()
 
         while True:
             if time.time() - prevTime >= self.queryTime:
                 log.debug("Sending Query")
-                self.arduino_send("all")
-                arduinoReply = self.arduino_receive()
+                self._arduino_send("all")
+                arduinoReply = self._arduino_receive()
                 log.info(arduinoReply)
                 prevTime = time.time()
                 t, m = self.format_value(arduinoReply)
